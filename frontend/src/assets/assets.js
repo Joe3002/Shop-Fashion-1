@@ -1,5 +1,6 @@
 import p_img1 from './image/p_img1.png'
 import logo1 from './image/logo1.png'
+import logo_admin from './image/logo_admin.png'
 import anh1 from './image/anh1.webp'
 import anh2 from './image/anh2.webp'
 import anh3 from './image/anh3.webp'
@@ -95,6 +96,7 @@ import cross_icon from './image/cross_icon.png'
 export const assets = {
     logo1,
     logo,
+    logo_admin,
     hero1,
     hero_img,
     cart_icon,
