@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { ShopContext } from "../context/ShopContext/ShopContext";
 // Thay thế đoạn mã trong ngoặc kép bằng Client ID từ tài khoản PayPal Developer của bạn
-const PAYPAL_CLIENT_ID = "YOUR_PAYPAL_CLIENT_ID_HERE";
+const PAYPAL_CLIENT_ID = process.env.REACT_APP_PAYPAL_CLIENT_ID || "AfCCRMp9qb5TN3M17e30Iiqy5m1SmFq1NXYfGJquFAIXpQYolVAdHXwiEhKuhlGHXZz4ZkHYnngH74G8";
 function Checkout({ total, cartItems, user }) {
   const { backendUrl } = useContext(ShopContext);
   // cartItems: mảng sản phẩm trong giỏ hàng, user: thông tin người dùng
