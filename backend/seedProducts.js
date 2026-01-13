@@ -37,19 +37,27 @@ const seedProducts = async () => {
 
         for (let i = 0; i < PRODUCTS_TO_CREATE; i++) {
             let category, subCategory, typeName;
+            const rand = Math.random();
             
-            // 50% là Váy (Nữ), 50% là Áo len (Winterwear)
-            if (i % 2 === 0) {
-                category = 'Women';
-                subCategory = 'Topwear'; 
-                typeName = 'Váy';
-            } else {
+            // Logic mới: 40% Áo len, 30% Váy liền, 30% Chân váy
+            if (rand < 0.4) {
+                // 40% là Áo len (Winterwear) cho mọi đối tượng
                 category = categories[Math.floor(Math.random() * categories.length)];
                 subCategory = 'Winterwear';
                 typeName = 'Áo len';
+            } else if (rand < 0.7) {
+                // 30% là Váy liền (Women - Topwear)
+                category = 'Women';
+                subCategory = 'Topwear'; 
+                typeName = 'Váy liền';
+            } else {
+                // 30% là Chân váy (Women - Bottomwear)
+                category = 'Women';
+                subCategory = 'Bottomwear';
+                typeName = 'Chân váy';
             }
             
-            const adjectives = ['Cotton', 'Cao cấp', 'Thoáng mát', 'Dệt kim', 'Vintage', 'Hiện đại', 'Len lông cừu', 'Họa tiết', 'Dáng suông', 'Body'];
+            const adjectives = ['Cotton', 'Cao cấp', 'Thoáng mát', 'Dệt kim', 'Vintage', 'Hiện đại', 'Len lông cừu', 'Họa tiết', 'Dáng suông', 'Body', 'Xếp ly', 'Hàn Quốc'];
             const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
             
             const name = `${typeName} ${category} ${adj} Mẫu ${Math.floor(Math.random() * 1000)}`;
@@ -67,7 +75,7 @@ const seedProducts = async () => {
 
             const product = {
                 name: name,
-                description: `Mô tả chi tiết cho sản phẩm ${name}. Thiết kế thời trang, chất liệu ${typeName === 'Áo len' ? 'len ấm áp' : 'vải mềm mại'}, phù hợp cho mùa ${typeName === 'Áo len' ? 'đông' : 'hè/thu'}.`,
+                description: `Mô tả chi tiết cho sản phẩm ${name}. Thiết kế thời trang, chất liệu ${typeName.includes('len') ? 'len ấm áp' : 'vải mềm mại'}, phù hợp cho mùa ${typeName.includes('len') ? 'đông' : 'hè/thu'}.`,
                 price: (Math.floor(Math.random() * 20) + 10) * 20000, // Giá từ 200k đến 600k
                 image: productImages,
                 category: category,
@@ -79,6 +87,20 @@ const seedProducts = async () => {
 
             newProducts.push(product);
         }
+
+        // --- THÊM LOG THỐNG KÊ ĐỂ DỄ KIỂM TRA ---
+        const stats = {
+            'Topwear (Váy liền/Áo)': 0,
+            'Bottomwear (Chân váy/Quần)': 0,
+            'Winterwear (Áo len/Khoác)': 0
+        };
+        newProducts.forEach(p => {
+            if (p.subCategory === 'Topwear') stats['Topwear (Váy liền/Áo)']++;
+            else if (p.subCategory === 'Bottomwear') stats['Bottomwear (Chân váy/Quần)']++;
+            else if (p.subCategory === 'Winterwear') stats['Winterwear (Áo len/Khoác)']++;
+        });
+        console.log('📊 Thống kê sản phẩm vừa tạo:', stats);
+        // -----------------------------------------
 
         await productModel.insertMany(newProducts);
         console.log(`\x1b[32m%s\x1b[0m`, `✅ Đã thêm thành công ${newProducts.length} sản phẩm mới vào cơ sở dữ liệu.`);

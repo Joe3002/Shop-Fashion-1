@@ -1,5 +1,5 @@
 import p_img1 from './image/p_img1.png'
-import logo1 from './image/logo1.png'
+import logo1 from './image/logo.png'
 import logo_admin from './image/logo_admin.png'
 import anh1 from './image/anh1.webp'
 import anh2 from './image/anh2.webp'

@@ -96,6 +96,9 @@ const adminLogin = async(req,res)=>{
             const token = jwt.sign(email+password,process.env.JWT_SECRET);
             res.json({success:true,token})
         } else{
+            console.log("❌ Admin Login Failed!");
+            console.log("   Input   :", email, password);
+            console.log("   Expected:", process.env.ADMIN_EMAIL, process.env.ADMIN_PASSWORD);
             res.json({success:false,message:"Không phải tài khoản admin"})
         }
     } catch (error) {
