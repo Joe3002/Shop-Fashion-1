@@ -13,6 +13,7 @@ const List = ({token}) => {
 
   const fetchList = async () =>{
     try {
+      console.log("Đang kết nối tới Backend:", backendUrl);
       const response = await axios.get(backendUrl + '/api/product/list')
       
       if (response.data.success) {
