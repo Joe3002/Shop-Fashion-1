@@ -6,9 +6,9 @@ import {backendUrl, formatVND} from '../App'
 import { toast } from 'react-toastify'
 
 
-const list = ({token}) => {
+const List = ({token}) => {
 
-  const [list,setList] = useState([])
+  const [list, setList] = useState([])
   const navigate = useNavigate();
 
   const fetchList = async () =>{
@@ -46,16 +46,6 @@ const list = ({token}) => {
 
   const handleEdit = (product) => {
     navigate(`/edit/${product._id}`);
-  };
-
-  const handleSave = async (updatedProduct) => {
-    try {
-      await axios.post(backendUrl + '/api/product/update', updatedProduct, { headers: { token } });
-      setShowEditForm(false);
-      await fetchList();
-    } catch (err) {
-      toast.error('Cập nhật sản phẩm thất bại!');
-    }
   };
 
   return (
@@ -109,4 +99,4 @@ const list = ({token}) => {
   )
 }
 
-export default list
+export default List
