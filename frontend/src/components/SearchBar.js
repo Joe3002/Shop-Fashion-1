@@ -32,6 +32,14 @@ const SearchBar = () => {
         setFilteredProducts([]);
     };
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            navigate('/collection');
+            setShowSearch(false);
+            setFilteredProducts([]);
+        }
+    }
+
     if (!showSearch) return null;
 
     return (
@@ -40,6 +48,7 @@ const SearchBar = () => {
                 <input 
                     value={search} 
                     onChange={(e) => setSearch(e.target.value)} 
+                    onKeyDown={handleKeyDown}
                     className='flex-1 outline-none bg-inherit text-sm' 
                     type="text" 
                     placeholder='Tìm kiếm sản phẩm...' 

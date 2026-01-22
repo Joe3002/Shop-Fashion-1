@@ -22,13 +22,7 @@ const ShopContextProvider = (props) => {
       const raw = localStorage.getItem('user');
       if (!raw) return null;
       const parsed = JSON.parse(raw);
-      // Đảm bảo user luôn có đủ trường _id, name, email, type
-      return parsed && parsed._id ? parsed : {
-        _id: parsed?._id || '',
-        name: parsed?.name || '',
-        email: parsed?.email || '',
-        type: parsed?.type || 'loginGoogle'
-      };
+      return parsed && parsed._id ? parsed : null;
     } catch {
       return null;
     }

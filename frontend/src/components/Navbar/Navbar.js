@@ -85,7 +85,7 @@ const Navbar = () => {
                 </div>
                 <button onClick={() => { navigate('/profile'); setMenuOpen(false) }} className='text-left hover:text-black'>Thông tin</button>
                 <button onClick={() => { navigate('/orders'); setMenuOpen(false) }} className='text-left hover:text-black'>Đơn hàng</button>
-                <button onClick={handleLogout} className='text-left hover:text-black'>Đăng Xuất</button>
+                <button onClick={handleLogout} className='text-left hover:text-black'>{user ? 'Đăng Xuất' : 'Đăng nhập'}</button>
               </div>
             </div>
           )}
