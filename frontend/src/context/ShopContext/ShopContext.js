@@ -62,18 +62,32 @@ const ShopContextProvider = (props) => {
     }
   }, [backendUrl]);
 
+  const getUserProfile = useCallback(async (tokenToUse) => {
+    try {
+      const authToken = tokenToUse || token;
+      const response = await axios.post(backendUrl + '/api/user/me', {}, { headers: { token: authToken } });
+      if (response.data?.success) {
+        setUser(response.data.user);
+      }
+    } catch (error) {
+      console.log('getUserProfile error', error);
+    }
+  }, [backendUrl, token]);
+
   // keep axios default header 'token' in sync and fetch cart when token changes
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common['token'] = token;
       localStorage.setItem('token', token);
       getUserCart(token);
+      getUserProfile(token);
     } else {
       delete axios.defaults.headers.common['token'];
       localStorage.removeItem('token');
       setCartItems({});
+      setUser(null);
     }
-  }, [token, getUserCart]);
+  }, [token, getUserCart, getUserProfile]);
 
   // persist user
   useEffect(() => {
@@ -105,7 +119,12 @@ const ShopContextProvider = (props) => {
     setCartItems(cartData);
     if (token) {
       try {
-        await axios.post(backendUrl + '/api/cart/add', { itemId, size }, { headers: { token } });
+        const response = await axios.post(backendUrl + '/api/cart/add', { itemId, size }, { headers: { token } });
+        if (response.data.success) {
+          toast.success(response.data.message);
+        } else {
+          toast.error(response.data.message);
+        }
       } catch (error) {
         console.log(error);
         toast.error(error?.message || 'Thêm giỏ hàng thất bại');

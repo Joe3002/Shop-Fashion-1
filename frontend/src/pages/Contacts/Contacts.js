@@ -1,26 +1,12 @@
-import React, { useEffect, useState, useContext } from 'react'
+import React, { useContext } from 'react'
 import Title from '../../components/LatesCollection/Title'
 import {assets} from '../../assets/assets'
 import NewsletterBox from '../../components/Newletter/NewsletterBox'
-import axios from 'axios'
-import { backendUrl } from '../../App'
 import { ShopContext } from '../../context/ShopContext/ShopContext'
+
 const Contacts = () => {
-  const { token } = useContext(ShopContext);
-  const [user, setUser] = useState({})
-  useEffect(() => {
-    const fetchUser = async () => {
-      console.log('Fetching user data...');
-      console.log('Token:', token);
-      try {
-        const res = await axios.get(`${backendUrl}/api/user/me`, { headers: { token } })
-        if (res.data.success) setUser(res.data.user)
-      } catch (error) {
-        console.error('Contacts user fetch error:', error);
-      }
-    }
-    if (token) fetchUser()
-  }, [token])
+  const { user } = useContext(ShopContext);
+
   return (
     <div>
       <div className='text-center text-2xl pt-10 border-t'>
@@ -30,8 +16,13 @@ const Contacts = () => {
         <img className='w-full md:max-w-[480px]' src={assets.contact_img} alt="" />
         <div className='flex flex-col justify-center items-start gap-6'>
           <p className='font-semibold text-xl text-gray-600'>Thông tin khách hàng</p>
-          <p className='text-gray-500'>Tên: {user.name || 'Chưa có'} <br/> Email: {user.email || 'Chưa có'}</p>
-          <hr className='my-4'/>
+          <div className='text-gray-500'>
+            <p>Tên: {user?.name || 'Khách'}</p>
+            <p>Email: {user?.email || 'Chưa có'}</p>
+            {user?.phone && <p>SĐT: {user.phone}</p>}
+            {user?.address && <p>Địa chỉ: {user.address}</p>}
+          </div>
+          <hr className='my-4 w-full'/>
           <p className='font-semibold text-xl text-gray-600'>Cửa hàng của chúng tôi</p>
           <p className=' text-gray-500'>Hà nội<br/>Trần cung </p>
           <p className=' text-gray-500'> SĐT: 0347329564 <br/> Email: hoangquanat@gmail.com</p>

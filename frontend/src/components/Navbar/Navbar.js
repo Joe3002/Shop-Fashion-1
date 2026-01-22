@@ -3,6 +3,7 @@ import React, { useContext, useState, useRef, useEffect } from 'react'
 import { assets } from '../../assets/assets'
 import { Link, NavLink } from 'react-router-dom'
 import { ShopContext } from '../../context/ShopContext/ShopContext';
+import SearchBar from '../SearchBar';
 
 const Navbar = () => {
   const [visibale, setVisible] = useState(false);
@@ -44,6 +45,7 @@ const Navbar = () => {
   }
 
   return (
+    <>
     <div className='flex items-center justify-between py-5 font-medium' >
       <Link to='/'><img src={assets.logo1} className='w-36' alt="" /></Link>
       <ul className='hidden sm:flex gap-5 text-sm text-gray-700'>
@@ -107,6 +109,8 @@ const Navbar = () => {
         </div>
       </div>
     </div>
+    <SearchBar />
+    </>
   )
 }
 
