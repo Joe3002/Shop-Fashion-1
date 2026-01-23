@@ -26,7 +26,7 @@ const Edit = ({ token }) => {
   }, []);
   const [bestseller, setBestseller] = useState(false);
   const [sizes, setSizes] = useState([]);
-
+  
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -39,7 +39,7 @@ const Edit = ({ token }) => {
           setCategory(p.category || 'Men');
           setSubcategory(p.subCategory || 'Topwear');
           setBestseller(p.bestseller || false);
-          setSizes(p.sizes || []);
+          setSizes(Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes : [{ size: '', stock: '' }]);
           setImage1(p.image?.[0] || false);
           setImage2(p.image?.[1] || false);
           setImage3(p.image?.[2] || false);
@@ -54,6 +54,22 @@ const Edit = ({ token }) => {
     fetchProduct();
   }, [id]);
 
+  // --- Quản lý Size và Tồn kho ---
+  const handleSizeChange = (index, event) => {
+      const newSizes = [...sizes];
+      newSizes[index][event.target.name] = event.target.value;
+      setSizes(newSizes);
+  };
+
+  const addSizeRow = () => {
+      setSizes([...sizes, { size: "", stock: "" }]);
+  };
+
+  const removeSizeRow = (index) => {
+      const newSizes = sizes.filter((_, i) => i !== index);
+      setSizes(newSizes);
+  };
+
   const onSubmitHandler = async (e) => {
     e.preventDefault();
     try {
@@ -65,7 +81,7 @@ const Edit = ({ token }) => {
       formData.append('category', category);
       formData.append('subCategory', subCategory);
       formData.append('bestseller', bestseller);
-      formData.append('sizes', JSON.stringify(sizes));
+      formData.append('sizes', JSON.stringify(sizes.map(s => ({...s, stock: Number(s.stock)}))));
       image1 && formData.append('image1', image1);
       image2 && formData.append('image2', image2);
       image3 && formData.append('image3', image3);
@@ -127,8 +143,17 @@ const Edit = ({ token }) => {
           </select>
         </div>
         <div className="md:col-span-2">
-          <label className="block mb-1 font-medium">Sizes (cách nhau bởi dấu phẩy)</label>
-          <input value={sizes} onChange={e => setSizes(e.target.value.split(','))} className="border rounded-lg p-2 w-full focus:border-green-400" placeholder="S,M,L" />
+          <div className='border p-4 rounded-md bg-gray-50'>
+            <p className='font-semibold mb-2'>Quản lý Size và Tồn kho</p>
+            {sizes.map((sizeItem, index) => (
+                <div key={index} className='grid grid-cols-3 gap-4 items-center mb-2'>
+                    <input name="size" onChange={(e) => handleSizeChange(index, e)} value={sizeItem.size} type="text" placeholder='Size' className='border p-2 rounded' required />
+                    <input name="stock" onChange={(e) => handleSizeChange(index, e)} value={sizeItem.stock} type="number" placeholder='Tồn kho' className='border p-2 rounded' required min="0" />
+                    {sizes.length > 1 && (<button type="button" onClick={() => removeSizeRow(index)} className='bg-red-500 text-white w-8 h-8 rounded'>X</button>)}
+                </div>
+            ))}
+            <button type="button" onClick={addSizeRow} className='mt-2 bg-blue-500 text-white px-4 py-1 rounded text-sm'>Thêm Size</button>
+          </div>
         </div>
       </div>
       <div>

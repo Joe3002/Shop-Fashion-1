@@ -11,9 +11,9 @@ const Collection = () => {
   const [showFilter,setShowFilter] = useState(false);
   const [filterProducts,setFilterProducts] = useState([]);
   const [category,setCategory] = useState([]);
-  const [categoryList, setCategoryList] = useState([]);
   const [subCategory,setSubCategory] = useState([]);
   const [sortType,setSortType] = useState('relavent');
+  const [subCategoryList, setSubCategoryList] = useState([]);
   const toggleCategory = (e)=>{
     if(category.includes(e.target.value)){
       setCategory(prev => prev.filter(item => item !== e.target.value))
@@ -65,47 +65,47 @@ const Collection = () => {
       applyFilter();
     },[category,subCategory,search,showSearch,products])
 
-    // Lấy danh mục từ backend
-    useEffect(() => {
-      axios.get(backendUrl + '/api/category/list').then(res => {
-        if (res.data.success) setCategoryList(res.data.categories);
-      });
-    }, []);
     useEffect(()=>{
       sortProduct();
     },[sortType])
+
+    // Lấy danh mục động từ backend
+    useEffect(() => {
+      axios.get(backendUrl + '/api/category/list')
+        .then(res => { if(res.data.success) setSubCategoryList(res.data.categories) });
+    }, []);
+
   return (
     <div className='flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t'>
       <div className='min-w-60'>
-        <p onClick={()=>setShowFilter(!showFilter)} className='my-2 text-xl flex items-center cursor-pointer gap-2 '>FILTERS
+        <p onClick={()=>setShowFilter(!showFilter)} className='my-2 text-xl flex items-center cursor-pointer gap-2 '>BỘ LỌC
             <img className={ `h-3 sm:hidden ${showFilter ?'rotate-90' : ''}`} src={assets.dropdown_icon} alt="" />
         </p>
 
         <div className={`border border-gray-300 pl-5 py-3 my-5 w-40  ${showFilter ? '' : 'hidden'} sm:block`}>
-          <p className='mb-3 text-sm font-medium'>CATEGORIES</p>
+          <p className='mb-3 text-sm font-medium'>DANH MỤC</p>
           <div className='flex flex-col gap-2 text-sm font-light text-gray-700'>
-            {/* Radio Nam/Nữ/Trẻ em */}
-            {['Nam', 'Nữ', 'Trẻ em'].map(opt => (
-              <label key={opt} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="category"
-                  value={opt}
-                  checked={category[0] === opt}
-                  onChange={e => setCategory([e.target.value])}
-                  className="accent-green-500"
-                />
-                <span className="font-medium">{opt}</span>
-              </label>
-            ))}
+            <p className='flex gap-2'>
+              <input className='w-3' type="checkbox" value={'All'} onChange={() => setCategory([])} checked={category.length === 0} /> Tất cả
+            </p>
+            <p className='flex gap-2'>
+              <input className='w-3' type="checkbox" value={'Men'} onChange={toggleCategory} checked={category.includes('Men')} /> Nam
+            </p>
+            <p className='flex gap-2'>
+              <input className='w-3' type="checkbox" value={'Women'} onChange={toggleCategory} checked={category.includes('Women')} /> Nữ
+            </p>
+            <p className='flex gap-2'>
+              <input className='w-3' type="checkbox" value={'Kids'} onChange={toggleCategory} checked={category.includes('Kids')} /> Trẻ em
+            </p>
           </div>
         </div>
         <div className={`border border-gray-300 pl-5 py-3 mt-6 w-40  ${showFilter ? '' : 'hidden'} sm:block`}>
-          <p className='mb-3 text-sm font-medium'>TYPE</p>
+          <p className='mb-3 text-sm font-medium'>LOẠI SẢN PHẨM</p>
           <div className='flex flex-col gap-2 text-sm font-light text-gray-700'>
-            {/* TYPE là các danh mục như áo khoác, quần, váy... lấy từ backend */}
-            {categoryList.length === 0 && <p className='text-gray-400'>Không có danh mục</p>}
-            {categoryList.map(cat => (
+            <p className='flex gap-2'>
+              <input className='w-3' type="checkbox" value={'All'} onChange={() => setSubCategory([])} checked={subCategory.length === 0} /> Tất cả
+            </p>
+            {subCategoryList.map((cat) => (
               <p className='flex gap-2' key={cat._id}>
                 <input className='w-3' type="checkbox" value={cat.name} onChange={toggleSubCategory} checked={subCategory.includes(cat.name)} /> {cat.name}
               </p>
@@ -116,7 +116,7 @@ const Collection = () => {
         <div className='flex-1'>
 
           <div className='flex justify-between text-base sm:text-2xl mb-4'>
-           <Title text1={'ALL'} text2={'COLLECTIONS'} />
+           <Title text1={'TẤT CẢ'} text2={'SẢN PHẨM'} />
            <select onChange={(e) => setSortType(e.target.value)} className='border-2 border-gray-300 text-sm px-2'>
             <option  value="relavent">Sắp xếp: Có liên quan</option>
             <option value="low-high">Sắp xếp: Thấp đến cao</option>

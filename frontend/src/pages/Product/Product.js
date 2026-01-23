@@ -56,9 +56,15 @@ const Product = () => {
                 <p>Select Size</p>
                 <div className='flex gap-2'>
                   {
-                    productData.sizes.map((item, index) => (
-                      <button onClick={()=>setSize(item)} className={`border py-2 px-4 bg-gray-100 ${item === size? 'border-orange-600':''}`} key={index}>{item}</button>
-                    ))
+                    productData.sizes.map((item, index) => {
+                      // Xử lý an toàn: nếu item là object {0: "M", ...} hoặc {size: "M"} hoặc chuỗi "M"
+                      let sizeValue = item;
+                      if (typeof item === 'object' && item !== null) {
+                          sizeValue = item.size || item[0] || ''; 
+                      }
+                      if (typeof sizeValue !== 'string' && typeof sizeValue !== 'number') return null; // Bỏ qua nếu vẫn lỗi
+                      return <button onClick={()=>setSize(sizeValue)} className={`border py-2 px-4 bg-gray-100 ${sizeValue === size? 'border-orange-600':''}`} key={index}>{sizeValue}</button>
+                    })
                     
                   }
                 </div>

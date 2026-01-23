@@ -7,7 +7,7 @@ const Footer = () => {
         <div>
           <img className='mb-5 w-32' src={assets.logo1} alt="" />
           <p className='w-full md:w-3/2 text-gray-600'>
-            Sứ mệnh của chúng tôi tại Forever là trao quyền cho khách hàng với sự lựa chọn, tiện lợi và sự tự tin. Chúng tôi cam kết cung cấp trải nghiệm mua sắm liền mạch vượt quá mong đợi, từ việc duyệt và đặt hàng đến giao hàng và hơn thế nữa
+            Sứ mệnh của chúng tôi là trao quyền cho khách hàng với sự lựa chọn, tiện lợi và sự tự tin. Chúng tôi cam kết cung cấp trải nghiệm mua sắm liền mạch vượt quá mong đợi, từ việc duyệt và đặt hàng đến giao hàng và hơn thế nữa
           </p>
         </div>
         <div>

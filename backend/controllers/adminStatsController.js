@@ -3,23 +3,55 @@ import productModel from '../models/productModel.js';
 
 export const getAdminStats = async (req, res) => {
   try {
-    // Lấy tất cả đơn hàng (không cần kiểm tra payment)
-    const orders = await orderModel.find();
-    console.log('Tất cả đơn hàng lấy được cho thống kê:', orders);
-    // Thống kê số lượng bán của từng sản phẩm
+    const { year, month } = req.query;
+    const currentYear = year ? parseInt(year) : new Date().getFullYear();
+    const currentMonth = month ? parseInt(month) : null; // Nếu null là chọn "Cả năm"
+
+    // 1. Lấy đơn hàng trong NĂM được chọn (để vẽ biểu đồ 12 tháng)
+    const startOfYear = new Date(currentYear, 0, 1);
+    const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59, 999);
+
+    const ordersInYear = await orderModel.find({
+        date: { $gte: startOfYear.getTime(), $lte: endOfYear.getTime() }
+    });
+
+    // Tính doanh thu cho 12 tháng
+    const monthlyRevenueArray = Array(12).fill(0);
+    ordersInYear.forEach(order => {
+        const d = new Date(order.date);
+        const m = d.getMonth(); // 0-11
+        monthlyRevenueArray[m] += order.amount || 0;
+    });
+
+    // 2. Lọc đơn hàng cho phần Tổng quan & Biểu đồ ngày (dựa trên tháng được chọn)
+    let ordersFiltered = ordersInYear;
+    if (currentMonth) {
+        ordersFiltered = ordersInYear.filter(order => {
+            const d = new Date(order.date);
+            return (d.getMonth() + 1) === currentMonth;
+        });
+    }
+
+    // 3. Tính toán các chỉ số tổng quan (dựa trên ordersFiltered)
+    const totalRevenue = ordersFiltered.reduce((sum, order) => sum + (order.amount || 0), 0);
+    const totalOrders = ordersFiltered.length;
+    const totalProducts = await productModel.countDocuments({}); // Tổng sản phẩm trong kho
+
     const productSales = {};
     let totalSold = 0;
-
-    orders.forEach(order => {
+    
+    ordersFiltered.forEach(order => {
       (order.items || []).forEach(item => {
         if (!item._id) return;
         if (!productSales[item._id]) {
-          productSales[item._id] = { name: item.name, sold: 0 };
+          productSales[item._id] = { name: item.name, sold: 0, revenue: 0 };
         }
         productSales[item._id].sold += item.quantity || 1;
+        productSales[item._id].revenue += (item.price || 0) * (item.quantity || 1);
         totalSold += item.quantity || 1;
       });
     });
+
     // Lấy thông tin sản phẩm ế (chưa bán được)
     const allProducts = await productModel.find();
     const unsoldProducts = allProducts.filter(p => !productSales[p._id]);
@@ -27,31 +59,31 @@ export const getAdminStats = async (req, res) => {
     const bestSellers = Object.entries(productSales)
       .sort((a, b) => b[1].sold - a[1].sold)
       .map(([id, info]) => ({ _id: id, ...info }));
-    // Thống kê doanh thu tổng
-    const totalRevenue = orders.reduce((sum, order) => sum + (order.amount || 0), 0);
-    const totalOrders = orders.length;
-    const totalProducts = allProducts.length;
 
-    // --- LOG KIỂM TRA DỮ LIỆU ---
-    console.log('--- ADMIN STATS DEBUG ---');
-    console.log('Tổng đơn hàng tìm thấy:', totalOrders);
-    console.log('Tổng sản phẩm tìm thấy:', totalProducts);
-    console.log('Tổng số lượng đã bán:', totalSold);
-    // -----------------------------
-
-    // Thống kê doanh thu theo ngày
-    // { '2025-10-17': 100000, ... }
+    // Thống kê doanh thu theo ngày (cho biểu đồ Line)
     let revenueByDate = {};
-    if (orders.length > 0) {
-      orders.forEach(order => {
+    
+    // Nếu đang lọc theo tháng, ta khởi tạo sẵn các ngày trong tháng đó với giá trị 0
+    if (currentMonth) {
+        const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+        for (let i = 1; i <= daysInMonth; i++) {
+            const dateKey = `${i}/${currentMonth}`;
+            revenueByDate[dateKey] = 0;
+        }
+    }
+
+    if (ordersFiltered.length > 0) {
+      ordersFiltered.forEach(order => {
         if (!order.date || !order.amount) return;
         const d = new Date(order.date);
-        // Định dạng yyyy-mm-dd
-        const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-        if (!revenueByDate[dateStr]) revenueByDate[dateStr] = 0;
+        // Định dạng ngày/tháng
+        const dateStr = `${d.getDate()}/${d.getMonth() + 1}`;
+        
+        if (revenueByDate[dateStr] === undefined) revenueByDate[dateStr] = 0;
         revenueByDate[dateStr] += order.amount;
       });
     }
+
     res.json({
       success: true,
       totalRevenue,
@@ -60,7 +92,8 @@ export const getAdminStats = async (req, res) => {
       totalSold,
       bestSellers,
       unsoldProducts: unsoldProducts.map(p => ({ _id: p._id, name: p.name })),
-      revenueByDate
+      revenueByDate,
+      monthlyRevenueArray // Dữ liệu mới: Doanh thu 12 tháng
     });
   } catch (error) {
     res.json({ success: false, message: error.message });

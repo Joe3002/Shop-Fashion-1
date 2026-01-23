@@ -43,7 +43,7 @@ const seedOrders = async () => {
 
         const newOrders = [];
         const statuses = ['Đã đặt hàng', 'Đang giao hàng', 'Đã giao hàng'];
-        const paymentMethods = ['Thanh toán khi nhận hàng', 'PayPal', 'QR'];
+        const paymentMethods = ['Thanh toán khi nhận hàng', 'QR'];
 
         // Dữ liệu mẫu để tạo tên và địa chỉ ngẫu nhiên
         const hoList = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Huỳnh', 'Phan', 'Vũ', 'Võ', 'Đặng', 'Bùi', 'Đỗ', 'Hồ', 'Ngô', 'Dương', 'Lý'];
@@ -56,7 +56,7 @@ const seedOrders = async () => {
         const endDate = new Date();
         const startDate = new Date(endDate.getFullYear() - 1, 9, 1); // Tháng 10 (vì tháng trong JS bắt đầu từ 0)
         
-        console.log(`Đang tạo ${ORDERS_TO_CREATE} đơn hàng trong khoảng từ ${startDate.toLocaleDateString('vi-VN')} đến ${endDate.toLocaleDateString('vi-VN')}...`);
+        console.log(`Đang tạo ${ORDERS_TO_CREATE} đơn hàng (bao gồm dữ liệu hôm nay/tháng này để test biểu đồ)...`);
 
         for (let i = 0; i < ORDERS_TO_CREATE; i++) {
             // 2. Chọn người dùng ngẫu nhiên
@@ -72,12 +72,13 @@ const seedOrders = async () => {
                 if (!randomProduct || !randomProduct.sizes || randomProduct.sizes.length === 0) continue;
 
                 const quantity = Math.floor(Math.random() * 2) + 1; // số lượng từ 1 đến 2
-                const size = randomProduct.sizes[Math.floor(Math.random() * randomProduct.sizes.length)];
+                // Lấy size từ object size ngẫu nhiên
+                const sizeInfo = randomProduct.sizes[Math.floor(Math.random() * randomProduct.sizes.length)];
                 
                 orderItems.push({
                     ...randomProduct.toObject(),
                     quantity,
-                    size
+                    size: sizeInfo.size // Chỉ lấy tên size
                 });
                 totalAmount += randomProduct.price * quantity;
             }
@@ -87,7 +88,23 @@ const seedOrders = async () => {
             // 4. Tạo các dữ liệu ngẫu nhiên khác cho đơn hàng
             const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
             const randomPaymentMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
-            const randomDate = new Date(startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime()));
+            
+            // --- CẬP NHẬT: Logic chọn ngày để đảm bảo có dữ liệu cho biểu đồ ---
+            let randomDate;
+            const now = new Date();
+            if (i < 15) {
+                // 15 đơn đầu tiên luôn là HÔM NAY
+                const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                randomDate = new Date(startToday.getTime() + Math.random() * (now.getTime() - startToday.getTime()));
+            } else if (i < 40) {
+                // 25 đơn tiếp theo là THÁNG NÀY
+                const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                randomDate = new Date(startMonth.getTime() + Math.random() * (now.getTime() - startMonth.getTime()));
+            } else {
+                // Còn lại random trong năm qua
+                randomDate = new Date(startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime()));
+            }
+            // ------------------------------------------------------------------
 
             // Tạo thông tin người nhận ngẫu nhiên
             const rHo = hoList[Math.floor(Math.random() * hoList.length)];

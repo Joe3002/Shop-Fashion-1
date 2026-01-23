@@ -1,5 +1,5 @@
 import express from 'express';
-import { placeOrder, allOrders, userOrders, updateStatus } from '../controllers/orderController.js';
+import { placeOrder, allOrders, userOrders, updateStatus, exportOrdersToExcel } from '../controllers/orderController.js';
 import adminAuth from '../middleware/adminAuth.js';
 import authUser from '../middleware/auth.js';
 
@@ -9,6 +9,8 @@ const orderRouter = express.Router();
 orderRouter.post('/list', (req, res, next) => { console.log('Route /list hit'); next(); }, adminAuth, allOrders);
 // Admin: cập nhật trạng thái đơn hàng
 orderRouter.post('/status', (req, res, next) => { console.log('Route /status hit'); next(); }, adminAuth, updateStatus);
+// Admin: xuất file excel
+orderRouter.post('/export', adminAuth, exportOrdersToExcel);
 
 // User: đặt hàng (COD)
 orderRouter.post('/place', (req, res, next) => { console.log('Route /place hit'); next(); }, authUser, placeOrder);

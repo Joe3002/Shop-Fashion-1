@@ -23,6 +23,10 @@ const AdminStats = ({ backendUrl, token }) => {
   const [stats, setStats] = useState(null); // Lưu dữ liệu thống kê lấy từ backend
   const [loading, setLoading] = useState(true); // Đang tải dữ liệu?
   const [error, setError] = useState(''); // Lỗi khi lấy dữ liệu
+  
+  // State cho bộ lọc
+  const [filterYear, setFilterYear] = useState(new Date().getFullYear());
+  const [filterMonth, setFilterMonth] = useState(''); // '' nghĩa là cả năm
 
   // Khi component mount hoặc token/backendUrl thay đổi, gọi API lấy dữ liệu thống kê
   useEffect(() => {
@@ -30,9 +34,14 @@ const AdminStats = ({ backendUrl, token }) => {
       setLoading(true);
       setError('');
       try {
+        const params = {
+            year: filterYear,
+            month: filterMonth
+        };
         // Gửi request lên backend để lấy thống kê admin
         const res = await axios.get(`${backendUrl}/api/user/admin/stats`, {
-          headers: { token }
+          headers: { token },
+          params
         });
         // Nếu thành công, lưu dữ liệu vào state
         if (res.data.success) setStats(res.data);
@@ -43,7 +52,7 @@ const AdminStats = ({ backendUrl, token }) => {
       setLoading(false);
     };
     if (token) fetchStats();
-  }, [backendUrl, token]);
+  }, [backendUrl, token, filterYear, filterMonth]);
 
   if (loading) return <div>Đang tải thống kê...</div>;
   if (error) return <div className='text-red-500'>Lỗi: {error}</div>;
@@ -54,16 +63,50 @@ const AdminStats = ({ backendUrl, token }) => {
   let revenueDateLabels = [];
   let revenueDateData = [];
   if (stats.revenueByDate) {
-    revenueDateLabels = Object.keys(stats.revenueByDate).sort(); // Danh sách ngày
+    // Sắp xếp ngày tăng dần (giả sử format d/m)
+    revenueDateLabels = Object.keys(stats.revenueByDate).sort((a, b) => {
+        const [d1, m1] = a.split('/').map(Number);
+        const [d2, m2] = b.split('/').map(Number);
+        return m1 - m2 || d1 - d2;
+    });
     revenueDateData = revenueDateLabels.map(date => stats.revenueByDate[date]); // Doanh thu từng ngày
   }
   // Lấy nhãn và dữ liệu sản phẩm bán chạy
   const bestSellerLabels = stats.bestSellers.map(p => p.name); // Tên sản phẩm bán chạy
   const bestSellerData = stats.bestSellers.map(p => p.sold); // Số lượng bán
 
+  // Dữ liệu cho biểu đồ 12 tháng
+  const monthlyRevenueData = stats.monthlyRevenueArray || [];
+  const monthlyLabels = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+
   return (
     <div className='w-full'>
-      <h2 className='text-2xl font-bold mb-6 text-gray-800'>Tổng Quan Hệ Thống</h2>
+      <div className='flex flex-col md:flex-row justify-between items-center mb-6'>
+        <h2 className='text-2xl font-bold text-gray-800'>Tổng Quan Hệ Thống</h2>
+        
+        {/* Bộ lọc Năm và Tháng */}
+        <div className='flex gap-4 mt-4 md:mt-0'>
+            <select 
+                className='border p-2 rounded shadow-sm' 
+                value={filterMonth} 
+                onChange={(e) => setFilterMonth(e.target.value)}
+            >
+                <option value="">Cả năm</option>
+                {Array.from({length: 12}, (_, i) => i + 1).map(m => (
+                    <option key={m} value={m}>Tháng {m}</option>
+                ))}
+            </select>
+            <select 
+                className='border p-2 rounded shadow-sm' 
+                value={filterYear} 
+                onChange={(e) => setFilterYear(e.target.value)}
+            >
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+            </select>
+        </div>
+      </div>
       
       {/* Cards Summary */}
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
@@ -88,7 +131,7 @@ const AdminStats = ({ backendUrl, token }) => {
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8'>
         {/* Biểu đồ doanh thu theo ngày */}
         <div className='bg-white p-6 rounded-lg shadow-md'>
-          <h3 className='text-lg font-semibold mb-4 text-gray-700'>Xu Hướng Doanh Thu</h3>
+          <h3 className='text-lg font-semibold mb-4 text-gray-700'>Doanh Thu Theo Ngày ({filterMonth ? `Tháng ${filterMonth}/${filterYear}` : `Năm ${filterYear}`})</h3>
           <div className='h-80'>
             {revenueDateLabels.length > 0 ? (
               <Line
@@ -154,6 +197,35 @@ const AdminStats = ({ backendUrl, token }) => {
             ) : (
               <div className='flex items-center justify-center h-full text-gray-400'>Chưa có dữ liệu</div>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Biểu đồ Doanh thu 12 tháng */}
+      <div className='grid grid-cols-1 gap-8 mb-8'>
+        <div className='bg-white p-6 rounded-lg shadow-md'>
+          <h3 className='text-lg font-semibold mb-4 text-gray-700'>Doanh Thu Các Tháng Trong Năm {filterYear}</h3>
+          <div className='h-80'>
+            <Bar
+              data={{
+                labels: monthlyLabels,
+                datasets: [
+                  {
+                    label: 'Doanh thu (VND)',
+                    data: monthlyRevenueData,
+                    backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                    borderRadius: 4,
+                  }
+                ]
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: { beginAtZero: true, title: { display: true, text: 'VND' } }
+                }
+              }}
+            />
           </div>
         </div>
       </div>

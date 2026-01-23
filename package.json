@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "mongoose": "^8.19.1",
-    "nodemailer": "^7.0.12"
+    "nodemailer": "^7.0.12",
+    "vnpay": "^2.4.4"
   }
 }

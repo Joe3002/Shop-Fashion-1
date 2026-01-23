@@ -1,21 +1,3 @@
-// Đăng nhập Google
-const googleLogin = async (req, res) => {
-    try {
-        const { email } = req.body;
-        if (!email) return res.json({ success: false, message: 'Thiếu email Google!' });
-        let user = await userModel.findOne({ email });
-        if (!user) {
-            // Tạo user mới, tên là phần trước @ của email, type loginGoogle
-            const name = email.split('@')[0];
-            user = new userModel({ name, email, type: 'loginGoogle' });
-            await user.save();
-        }
-        const token = createToken(user._id);
-        res.json({ success: true, token, user: { _id: user._id, name: user.name, email: user.email, type: user.type } });
-    } catch (error) {
-        res.json({ success: false, message: error.message });
-    }
-};
 import userModel from "../models/userModel.js";
 import validator from "validator";
 import bcrypt from 'bcrypt'
@@ -25,6 +7,7 @@ import nodemailer from 'nodemailer'
 const createToken = (id)=>{
     return jwt.sign({id},process.env.JWT_SECRET)
 }
+
 //Route for user login
 const loginUser = async (req,res) =>{
     try {
@@ -131,6 +114,25 @@ const adminLogin = async(req,res)=>{
         res.json({success:false,  message:error.message})
     }
 }
+
+// Đăng nhập Google
+const googleLogin = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.json({ success: false, message: 'Thiếu email Google!' });
+        let user = await userModel.findOne({ email });
+        if (!user) {
+            // Tạo user mới, tên là phần trước @ của email, type loginGoogle
+            const name = email.split('@')[0];
+            user = new userModel({ name, email, type: 'loginGoogle' });
+            await user.save();
+        }
+        const token = createToken(user._id);
+        res.json({ success: true, token, user: { _id: user._id, name: user.name, email: user.email, type: user.type } });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+};
 // Lấy thông tin user từ token
 const getUserInfo = async (req, res) => {
     try {
@@ -167,8 +169,53 @@ const updateUserProfile = async (req, res) => {
 // Lấy danh sách tất cả user
 const getAllUsers = async (req, res) => {
     try {
-        const users = await userModel.find({});
-        res.json({ success: true, users });
+        const { month, year } = req.query;
+        let dateMatch = {};
+
+        // Nếu có yêu cầu lọc theo tháng và năm
+        if (month && year) {
+            const startDate = new Date(year, month - 1, 1);
+            const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+            dateMatch = { date: { $gte: startDate.getTime(), $lte: endDate.getTime() } };
+        }
+
+        // Sử dụng aggregation để join với collection 'orders' và đếm số đơn hàng
+        const usersWithOrderCount = await userModel.aggregate([
+            {
+                $addFields: {
+                    userIdString: { $toString: "$_id" }
+                }
+            },
+            {
+                $lookup: {
+                    from: 'orders',
+                    let: { userIdStr: '$userIdString', userIdObj: '$_id' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $or: [
+                                        { $eq: ["$userId", "$$userIdStr"] }, // Khớp nếu userId trong orders là String
+                                        { $eq: ["$userId", "$$userIdObj"] }  // Khớp nếu userId trong orders là ObjectId
+                                    ]
+                                }
+                            }
+                        },
+                        // Nếu có điều kiện lọc ngày tháng thì thêm vào pipeline
+                        ...(Object.keys(dateMatch).length > 0 ? [{ $match: dateMatch }] : [])
+                    ],
+                    as: 'userOrders'
+                }
+            },
+            {
+                $project: {
+                    _id: 1, name: 1, email: 1, type: 1, phone: 1, address: 1, dob: 1, // Giữ lại các trường cần thiết
+                    orderCount: { $size: '$userOrders' }, // Đếm số lượng đơn hàng
+                    totalSpent: { $sum: '$userOrders.amount' } // Tính tổng tiền đã chi
+                }
+            }
+        ]);
+        res.json({ success: true, users: usersWithOrderCount });
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });

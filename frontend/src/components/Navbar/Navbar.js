@@ -104,7 +104,7 @@ const Navbar = () => {
           </div>
           <NavLink onClick={() => setVisible(false)} className='py-2 pl-6 border' to='/'>TRANG CHỦ</NavLink>
           <NavLink onClick={() => setVisible(false)} className='py-2 pl-6 border' to='/collection'>BỘ SƯU TẬP</NavLink>
-          <NavLink onClick={() => setVisible(false)} className='py-2 pl-6 border' to='/about'>VỀ FASHION</NavLink>
+          <NavLink onClick={() => setVisible(false)} className='py-2 pl-6 border' to='/about'>VỀ CHÚNG TÔI</NavLink>
           <NavLink onClick={() => setVisible(false)} className='py-2 pl-6 border' to='/contacts'>LIÊN HỆ</NavLink>
         </div>
       </div>

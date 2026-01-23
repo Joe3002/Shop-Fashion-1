@@ -147,6 +147,44 @@ const PlaceOrder = () => {
           </button>
           <button
             type='button'
+            className='bg-orange-500 text-white px-8 py-3 text-sm ml-4'
+            onClick={async () => {
+              try {
+                let orderItems = [];
+                for (const items in cartItems) {
+                  for (const item in cartItems[items]) {
+                    if (cartItems[items][item] > 0) {
+                      const itemInfo = structuredClone(products.find(product => product._id === items));
+                      if (itemInfo) {
+                        itemInfo.size = item;
+                        itemInfo.quantity = cartItems[items][item];
+                        orderItems.push(itemInfo);
+                      }
+                    }
+                  }
+                }
+                let orderData = {
+                  userId: user._id,
+                  address: formData,
+                  items: orderItems,
+                  amount: getCartAmount() + delivery_fee
+                };
+                const response = await axios.post(backendUrl + '/api/order/place-vnpay', orderData, { headers: { token } });
+                if (response.data.success) {
+                    window.location.replace(response.data.session_url);
+                } else {
+                    toast.error(response.data.message);
+                }
+              } catch (error) {
+                console.log(error);
+                toast.error(error.message);
+              }
+            }}
+          >
+            Thanh toán VNPay
+          </button>
+          <button
+            type='button'
             className='bg-green-600 text-white px-8 py-3 text-sm ml-4'
             onClick={() => setShowQR(true)}
           >
@@ -159,8 +197,9 @@ const PlaceOrder = () => {
               <p style={{ fontWeight: 600, marginBottom: 12 }}>Quét mã QR để chuyển khoản</p>
               <img src={require('../../assets/image/qr.jpg')} alt="QR chuyển khoản" style={{ maxWidth: 300, borderRadius: 8 }} />
               <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 16 }}>
-                <button style={{ padding: '8px 24px', background: '#222', color: '#fff', borderRadius: 8, border: 'none', cursor: 'pointer' }} onClick={() => setShowQR(false)}>Đóng</button>
+                <button type="button" style={{ padding: '8px 24px', background: '#222', color: '#fff', borderRadius: 8, border: 'none', cursor: 'pointer' }} onClick={() => setShowQR(false)}>Đóng</button>
                 <button
+                  type="button"
                   style={{ padding: '8px 24px', background: '#16a34a', color: '#fff', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 600 }}
                   onClick={async () => {
                     // Tạo đơn hàng đã thanh toán bằng QR

@@ -9,7 +9,7 @@ import Edit from './pages/Edit'
 import Login from './components/Login'
 import AdminStats from './components/AdminStats.jsx'
 import CategoryAdmin from './components/CategoryAdmin.jsx'
-import ListUsers from './pages/ListUsers.jsx'
+import ListUser from './pages/ListUser.jsx'
  import { ToastContainer } from 'react-toastify';
 export const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
 export const formatVND = (amount) => {
@@ -44,7 +44,7 @@ const App = () => {
               <Route path='/edit/:id' element={<Edit token={token} />} />
               <Route path='/stats' element={<AdminStats backendUrl={backendUrl} token={token} />} />
               <Route path='/category' element={<CategoryAdmin token={token} />} />
-              <Route path='/users' element={<ListUsers token={token} backendUrl={backendUrl} />} />
+              <Route path='/users' element={<ListUser token={token} backendUrl={backendUrl} />} />
             </Routes>
             </div>
            
